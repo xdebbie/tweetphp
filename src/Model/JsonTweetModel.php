@@ -26,11 +26,29 @@ class JsonTweetModel
         return $id;
     }
 
+    public function find($id)
+    {
+        $tweets = $this->jsonDb
+            ->select()
+            ->where(['id' => $id])
+            ->get();
+
+        return $tweets[0];
+    }
+
     public function findAll(): array
     {
 
         return $this->jsonDb->select()
             ->from('tweet.json')
             ->get();
+    }
+
+    public function remove($id)
+    {
+        $this->jsonDb
+            ->delete()
+            ->where(['id' => $id])
+            ->trigger();
     }
 }

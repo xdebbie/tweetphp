@@ -76,4 +76,52 @@ class JsonTweetModelTest extends TestCase
         $this->assertEquals('Deborah', $tweet['author']);
         $this->assertEquals('This is a super tweet', $tweet['content']);
     }
+
+    /**
+     * @test
+     */
+    public function we_can_find_a_tweet_by_its_id()
+    {
+        // Given we have a tweet and we know its id on the json file
+        $id = uniqid();
+        $this->jsonDb->insert('tweet.json', [
+            'id' => $id,
+            'author' => 'Deborah',
+            'content' => '#FreeBritney'
+        ]);
+
+        // When we call find() on our model
+        $tweet = $this->model->find($id);
+
+        // Then we should obtain the tweet
+        $this->assertIsArray($tweet);
+        $this->assertEquals('Deborah', $tweet['author']);
+        $this->assertEquals('#FreeBritney', $tweet['content']);
+    }
+
+    /**
+     * @test
+     */
+    public function we_can_remove_a_tweet()
+    {
+        // Given we have a tweet in the json file and we know its id
+        $id = uniqid();
+        $this->jsonDb->insert('tweet.json', [
+            'id' => $id,
+            'author' => 'Deborah',
+            'content' => '#FreeBritney'
+        ]);
+
+        // When we call remove with id
+        $this->model->remove($id);
+
+        // Then we should find nothing if we search for this id
+        $tweets = $this->jsonDb
+            ->select()
+            ->from('tweet.json')
+            ->where(['id' => $id])
+            ->get();
+
+        $this->assertCount(0, $tweets);
+    }
 }
