@@ -12,11 +12,12 @@ class JsonTweetModelTest extends TestCase
     protected function setUp(): void
     {
         $this->jsonDb = new JSONDB(__DIR__ . '/../../json');
-        $this->model = new JsonTweetModel($this->jsonDb);
 
         $this->jsonDb->delete()
             ->from('tweet.json')
             ->trigger();
+
+        $this->model = new JsonTweetModel($this->jsonDb);
     }
 
     /**
@@ -28,27 +29,31 @@ class JsonTweetModelTest extends TestCase
         $this->jsonDb->insert('tweet.json', [
             'author' => 'Deborah',
             'content' => 'This is my first tweet',
-            'id' => uniqid()
+            'id' => uniqid(),
+            'published_at' => new DateTime()
         ]);
 
         $this->jsonDb->insert('tweet.json', [
             'author' => 'Deborah too',
             'content' => 'What a day',
-            'id' => uniqid()
+            'id' => uniqid(),
+            'published_at' => new DateTime()
         ]);
 
         $this->jsonDb->insert('tweet.json', [
             'author' => 'Deborah again',
             'content' => 'Need a drink',
-            'id' => uniqid()
+            'id' => uniqid(),
+            'published_at' => new DateTime()
         ]);
 
         // When we can findAll() on our model
-        $tweets = $this->model->findAll();
+        $model = new JsonTweetModel($this->jsonDb);
+        $resultTweet = $model->findAll();
 
         // Then it will return 3 tweets
-        $this->assertIsArray($tweets);
-        $this->assertCount(3, $tweets);
+        $this->assertIsArray($resultTweet);
+        $this->assertCount(3, $resultTweet);
     }
 
     /**
@@ -64,17 +69,15 @@ class JsonTweetModelTest extends TestCase
         // Then
         $this->assertNotNull($id);
         // and I should find a tweet with $id
-        $tweets = $this->jsonDb->select()
+        $tweet = $this->jsonDb->select()
             ->from('tweet.json')
             ->where(['id' => $id])
             ->get();
 
-        $tweet = $tweets[0];
-
         // and the tweet should contain Deborah // this is a super tweet
         $this->assertIsArray($tweet);
-        $this->assertEquals('Deborah', $tweet['author']);
-        $this->assertEquals('This is a super tweet', $tweet['content']);
+        $this->assertEquals('Deborah', $tweet[0]['author']);
+        $this->assertEquals('This is a super tweet', $tweet[0]['content']);
     }
 
     /**
@@ -87,16 +90,17 @@ class JsonTweetModelTest extends TestCase
         $this->jsonDb->insert('tweet.json', [
             'id' => $id,
             'author' => 'Deborah',
-            'content' => '#FreeBritney'
+            'content' => '#FreeBritney',
+            'published_at' => new DateTime()
         ]);
 
         // When we call find() on our model
         $tweet = $this->model->find($id);
 
         // Then we should obtain the tweet
-        $this->assertIsArray($tweet);
-        $this->assertEquals('Deborah', $tweet['author']);
-        $this->assertEquals('#FreeBritney', $tweet['content']);
+        $this->assertIsObject($tweet);
+        $this->assertEquals('Deborah', $tweet->author);
+        $this->assertEquals('#FreeBritney', $tweet->content);
     }
 
     /**
@@ -109,7 +113,8 @@ class JsonTweetModelTest extends TestCase
         $this->jsonDb->insert('tweet.json', [
             'id' => $id,
             'author' => 'Deborah',
-            'content' => '#FreeBritney'
+            'content' => '#FreeBritney',
+            'published_at' => new DateTime()
         ]);
 
         // When we call remove with id
@@ -123,5 +128,29 @@ class JsonTweetModelTest extends TestCase
             ->get();
 
         $this->assertCount(0, $tweets);
+    }
+
+    /**
+     * @test
+     */
+    public function we_can_find_a_tweet_with_its_content()
+    {
+        // Given
+        $content = "#FreeBritney";
+
+        $this->jsonDb->insert('tweet.json', [
+            'id' => uniqid(),
+            'author' => 'Deborah',
+            'content' => $content,
+            'published_at' => new DateTime()
+        ]);
+
+        // When we call findByContent
+        $tweet = $this->model->findByContent($content);
+
+        // Then we should find 1 tweet
+        $this->assertIsObject($tweet);
+        $this->assertEquals('Deborah', $tweet->author);
+        $this->assertEquals($content, $tweet->content);
     }
 }

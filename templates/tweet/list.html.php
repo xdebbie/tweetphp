@@ -1,5 +1,7 @@
+<h1><?php $name ?></h1>
+
 <ul>
-    <?php foreach ($variables['tweets'] as $tweet) : ?>
-        <li><?= $tweet['content'] ?></li>
-    <?php endforeach ?>
+    <?php foreach ($tweets as $tweet) : ?>
+        <li><?= $tweet->content ?></li>
+    <?php endforeach; ?>
 </ul>

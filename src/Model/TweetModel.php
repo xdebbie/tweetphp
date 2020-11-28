@@ -4,7 +4,7 @@ namespace Twitter\Model;
 
 use PDO;
 
-class TweetModel
+class TweetModel implements TweetModelInterface
 {
     protected PDO $pdo;
 
@@ -13,7 +13,7 @@ class TweetModel
         $this->pdo = $pdo;
     }
 
-    public function findAll()
+    public function findAll(): array
     {
         // 3. Recover the data sent by the db
         return $this->pdo
@@ -40,7 +40,7 @@ class TweetModel
         ]);
     }
 
-    public function find(int $id)
+    public function find($id)
     {
         $query = $this->pdo->prepare('SELECT t.* FROM tweet t WHERE id = :id');
         $query->execute([
@@ -50,13 +50,13 @@ class TweetModel
         return $query->fetch();
     }
 
-    public function findByContent(string $content): array
+    public function findByContent(string $content)
     {
         $request = $this->pdo->prepare('SELECT t.* FROM tweet t WHERE content = :content');
         $request->execute([
-            'content' => "This is a super tweet"
+            'content' => $content
         ]);
 
-        return $request->fetchAll();
+        return $request->fetch();
     }
 }

@@ -4,21 +4,27 @@ namespace Twitter\Controller;
 
 use Twitter\Http\Request;
 use Twitter\Http\Response;
+use Twitter\Model\JsonTweetModel;
 use Twitter\Model\TweetModel;
+use Twitter\Model\TweetModelInterface;
 
 class TweetController extends Controller
 {
-    protected TweetModel $model;
+    protected TweetModelInterface $model;
 
-    public function __construct(TweetModel $model)
+    public function __construct(TweetModelInterface $model)
     {
         $this->model = $model;
     }
 
+    /**
+     * @return Response
+     */
     public function listTweets(): Response
     {
         return $this->render('tweet/list', [
-            'tweets' => $this->model->findAll()
+            'tweets' => $this->model->findAll(),
+            "name" => "Deborah"
         ]);
     }
 
@@ -30,10 +36,10 @@ class TweetController extends Controller
     public function saveTweet(Request $request): Response
     {
         // 1. Fetch the content on request
-        $content = $request->getParam('content');
+        // $content = $request->getParam('content');
 
         // 2. Save the tweet
-        $this->model->insert("Deborah", $content);
+        $this->model->insert('Deborah', $request->getParam('content'));
 
         return $this->redirect('/');
     }
@@ -41,10 +47,10 @@ class TweetController extends Controller
     public function delete(Request $request): Response
     {
         // 1. Fetch the ID that we have to delete ($request)
-        $id = $request->getParam('id');
+        // $id = $request->getParam('id');
 
         // 2. Delete the tweet (Model)
-        $this->model->remove($id);
+        $this->model->remove($request->getParam('id'));
         return $this->redirect('/');
     }
 }

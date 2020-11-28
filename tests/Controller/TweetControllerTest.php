@@ -1,25 +1,33 @@
 <?php
 
+use Jajo\JSONDB;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DomCrawler\Crawler;
 use Test\PDOFactory;
 use Twitter\Controller\TweetController;
 use Twitter\Http\Request;
+use Twitter\Model\JsonTweetModel;
 use Twitter\Model\TweetModel;
+use Twitter\Model\TweetModelInterface;
 
 class TweetControllerTest extends TestCase
 {
     protected PDO $pdo;
-    protected TweetModel $model;
+    protected TweetModelInterface $model;
     protected TweetController $controller;
 
     protected function setUp(): void
     {
         $this->pdo = PDOFactory::getPdo();
-        $this->model = new TweetModel($this->pdo);
-        $this->controller = new TweetController($this->model);
+        // $this->jsonDb = new JSONDB(__DIR__ . '/../../json');
 
         $this->pdo->query('DELETE FROM tweet');
+        // $this->jsonDb->delete()
+        //     ->from('tweet.json')
+        //     ->trigger();
+
+        $this->model = new TweetModel($this->pdo);
+        $this->controller = new TweetController($this->model);
     }
 
     /**
@@ -54,22 +62,21 @@ class TweetControllerTest extends TestCase
      */
     public function we_can_display_a_tweet_form()
     {
-        // Given
-
         // When we call our controller
         $response = $this->controller->displayForm();
 
         // Then it displays the form
         $crawler = new Crawler($response->getContent());
-        $count = $crawler->filter('form')->count();
-        $this->assertEquals(1, $count);
-
-        $count = $crawler->filter('textarea')->count();
-        $this->assertEquals(1, $count);
 
         $form = $crawler->filter('form');
         $this->assertEquals('save.php', $form->attr('action'));
         $this->assertEquals('post', $form->attr('method'));
+
+        $count = $form->count();
+        $this->assertEquals(1, $count);
+
+        $count = $crawler->filter('textarea')->count();
+        $this->assertEquals(1, $count);
     }
 
     /**
@@ -87,15 +94,11 @@ class TweetControllerTest extends TestCase
         $response = $this->controller->saveTweet($request);
 
         // Then we should find on the db the new tweet
-        $data = $this->model->findByContent("This is a super tweet");
+        $tweet = $this->model->findByContent("This is a super tweet");
 
-        $this->assertEquals(1, count($data));
+        $this->assertIsObject($tweet);
         $this->assertEquals(302, $response->getStatusCode());
         $this->assertEquals('/', $response->getHeader('Location'));
-
-        $headers = $response->getHeaders();
-        $this->assertArrayHasKey('Location', $headers);
-        $this->assertEquals('/', $headers['Location']);
     }
 
     /**
@@ -106,7 +109,7 @@ class TweetControllerTest extends TestCase
         // Given a tweet exists
         // $this->pdo->query('INSERT INTO tweet SET author = "Deborah", content = "My test tweet", published_at = NOW()');
         $id = $this->model->insert("Deborah", "My test tweet");
-        $id = $this->pdo->lastInsertId();
+        // $id = $this->pdo->lastInsertId();
 
         // and we have a request with a param id of the tweet
         $request = new Request([
@@ -124,8 +127,8 @@ class TweetControllerTest extends TestCase
 
         // $this->assertEquals(0, $query->rowCount());
 
-        $tweet = $this->model->find($id);
-        $this->assertEquals(false, $tweet);
+        $query = $this->model->find($id);
+        $this->assertFalse($query);
 
         // and we should be redirected to /
         $this->assertEquals(302, $response->getStatusCode());

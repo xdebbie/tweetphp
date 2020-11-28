@@ -2,9 +2,10 @@
 
 namespace Twitter\Model;
 
+use DateTime;
 use Jajo\JSONDB;
 
-class JsonTweetModel
+class JsonTweetModel implements TweetModelInterface
 {
     protected JSONDB $jsonDb;
 
@@ -21,6 +22,7 @@ class JsonTweetModel
             'author' => $author,
             'content' => $content,
             'id' => $id,
+            'published_at' => new DateTime()
         ]);
 
         return $id;
@@ -30,10 +32,11 @@ class JsonTweetModel
     {
         $tweets = $this->jsonDb
             ->select()
+            ->from('tweet.json')
             ->where(['id' => $id])
             ->get();
 
-        return $tweets[0];
+        return isset($tweets[0]) ? (object) $tweets[0] : false;
     }
 
     public function findAll(): array
@@ -50,5 +53,16 @@ class JsonTweetModel
             ->delete()
             ->where(['id' => $id])
             ->trigger();
+    }
+
+    public function findByContent(string $content)
+    {
+        $tweets = $this->jsonDb
+            ->select()
+            ->from('tweet.json')
+            ->where(['content' => $content])
+            ->get();
+
+        return isset($tweets[0]) ? (object) $tweets[0] : false;
     }
 }
